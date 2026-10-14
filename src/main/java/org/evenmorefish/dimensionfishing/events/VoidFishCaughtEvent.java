@@ -4,22 +4,33 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.player.PlayerEvent;
+import org.bukkit.inventory.ItemStack;
 import org.evenmorefish.dimensionfishing.DimensionFishing;
 import org.evenmorefish.dimensionfishing.common.TrackedHook;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class VoidFishCaughtEvent extends PlayerEvent implements Cancellable {
 
     private static final HandlerList handlers = new HandlerList();
     private final TrackedHook hook;
-
     private boolean cancel;
+
+    private ItemStack caughtItem = null;
 
     @ApiStatus.Internal
     public VoidFishCaughtEvent(@NotNull TrackedHook hook) {
         super(hook.getPlayer());
         this.hook = hook;
+    }
+
+    public @Nullable ItemStack getCaughtItem() {
+        return this.caughtItem;
+    }
+
+    public void setCaughtItem(@Nullable ItemStack item) {
+        this.caughtItem = item;
     }
 
     public @NotNull TrackedHook getTrackedHook() {
