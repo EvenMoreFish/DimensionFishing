@@ -147,7 +147,14 @@ public class TrackedHook {
     }
 
     private boolean isLava() {
-        return this.canLava && hook.getLocation().getBlock().getType() == Material.LAVA;
+        if (!this.canLava || hook.getLocation().getBlock().getType() != Material.LAVA) {
+            return false;
+        }
+        if (hook.getLocation().clone().add(0, 1, 0).getBlock().getType() == Material.LAVA) { // If the block above is lava, invalidate.
+            invalidate();
+            return false;
+        }
+        return true;
     }
 
     private boolean isWater() {
@@ -180,7 +187,9 @@ public class TrackedHook {
         this.shouldCustomTick = false;
         this.fishingState = null;
         this.hookState = null;
-        stand.remove();
+        if (stand != null) {
+            stand.remove();
+        }
         hook.remove();
     }
 
