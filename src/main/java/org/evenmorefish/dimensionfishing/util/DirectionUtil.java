@@ -5,7 +5,6 @@ import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
-import org.evenmorefish.dimensionfishing.DimensionFishing;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
@@ -19,7 +18,7 @@ public class DirectionUtil {
     }
 
     public static void launchToPlayer(@NonNull ItemStack item, @NonNull Location startLocation, @NonNull Player player) {
-        Location endLocation = player.getLocation().clone();
+        Location endLocation = player.getEyeLocation().clone();
         if (!startLocation.getWorld().equals(endLocation.getWorld())) {
             return;
         }

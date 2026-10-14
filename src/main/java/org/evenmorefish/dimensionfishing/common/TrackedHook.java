@@ -10,10 +10,11 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
-import org.bukkit.entity.ArmorStand;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.FishHook;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.TextDisplay;
 import org.bukkit.persistence.PersistentDataType;
 import org.evenmorefish.dimensionfishing.DimensionFishing;
 import org.evenmorefish.dimensionfishing.config.DimensionFishingConfigProvider;
@@ -40,7 +41,7 @@ public class TrackedHook {
 
     private FishingState fishingState = FishingState.NONE;
     private HookState hookState;
-    private ArmorStand stand;
+    private TextDisplay display;
     private boolean shouldCustomTick;
     private final int voidRequiredLevel;
 
@@ -71,8 +72,11 @@ public class TrackedHook {
         return this.player;
     }
 
-    public @Nullable ArmorStand getStand() {
-        return this.stand;
+    /**
+     * @return The invisible TextDisplay this hook is attached to.
+     */
+    public @Nullable TextDisplay getDisplay() {
+        return this.display;
     }
 
     public @NotNull FishingState getFishingState() {
@@ -102,10 +106,10 @@ public class TrackedHook {
 
         if (fishingState instanceof NoneFishingState) {
             if (isLava()) {
-                attachToStand();
+                attachToDisplay();
                 this.fishingState = FishingState.LAVA;
             } else if (isVoid()) {
-                attachToStand();
+                attachToDisplay();
                 this.fishingState = FishingState.VOID;
             } else if (isWater()) {
                 // If in water, vanilla will handle it.
@@ -122,6 +126,7 @@ public class TrackedHook {
 
     public void reel() {
         this.shouldCustomTick = false;
+        setPulled(false);
         // Store states as they are removed when #invalidate is called
         HookState hookState = this.hookState;
         FishingState fishingState = this.fishingState;
@@ -143,14 +148,16 @@ public class TrackedHook {
         if (hooked == null) {
             return false;
         }
-        return !hooked.equals(stand);
+        return !hooked.equals(display);
     }
 
     private boolean isLava() {
         if (!this.canLava || hook.getLocation().getBlock().getType() != Material.LAVA) {
             return false;
         }
-        if (hook.getLocation().clone().add(0, 1, 0).getBlock().getType() == Material.LAVA) { // If the block above is lava, invalidate.
+        Material above = hook.getLocation().clone().add(0, 1, 0).getBlock().getType();
+        Material above2 = hook.getLocation().clone().add(0, 2, 0).getBlock().getType();
+        if (above == Material.LAVA && above2 == Material.LAVA) { // If in a lava pillar, invalidate.
             invalidate();
             return false;
         }
@@ -187,8 +194,8 @@ public class TrackedHook {
         this.shouldCustomTick = false;
         this.fishingState = null;
         this.hookState = null;
-        if (stand != null) {
-            stand.remove();
+        if (display != null) {
+            display.remove();
         }
         hook.remove();
     }
@@ -199,39 +206,38 @@ public class TrackedHook {
 
     // ArmorStand shenanigans
 
-    private void attachToStand() {
-        if (this.stand != null) {
+    private void attachToDisplay() {
+        if (this.display != null) {
             return;
         }
-        ArmorStand stand = createNewStand(hook.getLocation());
-        hook.setHookedEntity(stand);
-        stand.addPassenger(hook);
+
+        Location displayLocation = hook.getLocation();
+        while (displayLocation.getBlock().getType() == Material.LAVA) {
+            displayLocation.setY(displayLocation.toCenterLocation().getY() + 0.6);
+        }
+
+        TextDisplay display = createNewDisplay(displayLocation);
+        hook.setHookedEntity(display);
+        display.addPassenger(hook);
         hook.setVisualFire(false);
         hook.setFireTicks(0);
-        this.stand = stand;
+        this.display = display;
     }
 
-    private ArmorStand createNewStand(@NonNull Location location) {
-        ArmorStand stand = location.getWorld().spawn(location, ArmorStand.class);
-        stand.setInvisible(true);
-        stand.setInvulnerable(true);
-        stand.setVisualFire(false);
-        stand.setPersistent(false);
-        stand.setGravity(false);
-        stand.setAI(false);
-        stand.getPersistentDataContainer().set(
+    private TextDisplay createNewDisplay(@NonNull Location location) {
+        TextDisplay display = location.getWorld().spawn(location, TextDisplay.class);
+        display.setInvisible(true);
+        display.setInvulnerable(true);
+        display.setVisualFire(false);
+        display.setPersistent(false);
+        display.setGravity(false);
+        display.getPersistentDataContainer().set(
             Keys.STAND_KEY,
             PersistentDataType.BOOLEAN,
             true
         );
 
-        // Set a small scale so the hook doesn't float.
-        AttributeInstance scale = stand.getAttribute(Attribute.GENERIC_SCALE);
-        if (scale != null) {
-            scale.setBaseValue(0.1);
-        }
-
-        return stand;
+        return display;
     }
 
     private boolean checkMcMMOOverfishing() {
@@ -262,11 +268,14 @@ public class TrackedHook {
     }
 
     public void setPulled(boolean pulled) {
+        if (this.pulled == pulled) {
+            return;
+        }
         if (pulled) {
-            stand.teleport(stand.getLocation().add(0, -0.3, 0));
+            display.teleport(display.getLocation().add(0, -0.3, 0));
             fishingState.playBiteSound(player);
         } else {
-            stand.teleport(stand.getLocation().add(0, 0.3, 0));
+            display.teleport(display.getLocation().add(0, 0.3, 0));
         }
         this.pulled = pulled;
     }
