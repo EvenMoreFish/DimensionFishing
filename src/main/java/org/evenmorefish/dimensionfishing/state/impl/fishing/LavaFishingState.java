@@ -1,4 +1,4 @@
-package org.evenmorefish.dimensionfishing.state.impl;
+package org.evenmorefish.dimensionfishing.state.impl.fishing;
 
 import org.bukkit.World;
 import org.bukkit.entity.Player;

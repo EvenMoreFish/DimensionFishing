@@ -5,7 +5,6 @@ import com.gmail.nossr50.datatypes.player.McMMOPlayer;
 import com.gmail.nossr50.locale.LocaleLoader;
 import com.gmail.nossr50.skills.fishing.FishingManager;
 import com.gmail.nossr50.util.player.UserManager;
-import org.apache.commons.lang3.ClassLoaderUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -17,13 +16,14 @@ import org.bukkit.entity.FishHook;
 import org.bukkit.entity.Player;
 import org.bukkit.persistence.PersistentDataType;
 import org.evenmorefish.dimensionfishing.DimensionFishing;
-import org.evenmorefish.dimensionfishing.LureTracker;
 import org.evenmorefish.dimensionfishing.config.DimensionFishingConfigProvider;
 import org.evenmorefish.dimensionfishing.events.LavaFishCaughtEvent;
 import org.evenmorefish.dimensionfishing.events.VoidFishCaughtEvent;
-import org.evenmorefish.dimensionfishing.state.CatchState;
 import org.evenmorefish.dimensionfishing.state.FishingState;
-import org.evenmorefish.dimensionfishing.state.impl.NoneFishingState;
+import org.evenmorefish.dimensionfishing.state.HookState;
+import org.evenmorefish.dimensionfishing.state.impl.fishing.NoneFishingState;
+import org.evenmorefish.dimensionfishing.state.impl.hook.CatchHookState;
+import org.evenmorefish.dimensionfishing.state.impl.hook.WaitHookState;
 import org.evenmorefish.dimensionfishing.util.Keys;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -37,17 +37,12 @@ public class TrackedHook {
 
     private final FishHook hook;
     private final Player player;
-    private LureTracker lureTracker;
 
     private FishingState fishingState = FishingState.NONE;
-    private CatchState catchState = CatchState.WAIT;
+    private HookState hookState;
     private ArmorStand stand;
     private boolean shouldCustomTick;
     private final int voidRequiredLevel;
-
-    private int waitTime = 0;
-    private int lureTime = 0;
-    private int catchTime = 40;
 
     // The duration of ticks the hook should be "pulled" by a fish for.
     private boolean pulled = false;
@@ -61,9 +56,7 @@ public class TrackedHook {
         this.hook = hook;
         this.voidRequiredLevel = player.getLocation().getBlockY() - RANDOM.nextInt(4, 6);
 
-        // Calculating lure and wait time. Unfortunately the Bukkit API doesn't apply lure so we have to do it ourselves :D
-        this.waitTime = fetchWaitTime(lureLevel);
-        this.lureTime = RANDOM.nextInt(hook.getMinLureTime(), hook.getMaxLureTime());
+        this.hookState = new WaitHookState(this, lureLevel);
 
         this.canLava = canLavaFish();
         this.canVoid = canVoidFish();
@@ -86,8 +79,8 @@ public class TrackedHook {
         return this.fishingState;
     }
 
-    public @NotNull CatchState getCatchState() {
-        return this.catchState;
+    public @NotNull HookState getHookState() {
+        return this.hookState;
     }
 
     public void tick() {
@@ -103,8 +96,7 @@ public class TrackedHook {
             if (pullTime > 0) {
                 pullTime--;
             } else {
-                stand.teleport(stand.getLocation().add(0, 0.3, 0));
-                pulled = false;
+                setPulled(false);
             }
         }
 
@@ -112,11 +104,9 @@ public class TrackedHook {
             if (isLava()) {
                 attachToStand();
                 this.fishingState = FishingState.LAVA;
-                this.lureTracker = new LureTracker(this);
             } else if (isVoid()) {
                 attachToStand();
                 this.fishingState = FishingState.VOID;
-                this.lureTracker = new LureTracker(this);
             } else if (isWater()) {
                 // If in water, vanilla will handle it.
                 this.shouldCustomTick = false;
@@ -124,39 +114,19 @@ public class TrackedHook {
             return;
         }
 
-        switch (catchState) {
-            case WAIT -> {
-                waitTime--;
-                if (waitTime <= 0) {
-                    catchState = CatchState.LURE;
-                }
-            }
-            case LURE -> {
-                if (lureTracker != null) {
-                    lureTracker.tick();
-                }
-                lureTime--;
-                if (lureTime <= 0) {
-                    fishingState.playBiteSound(player);
-                    stand.teleport(stand.getLocation().add(0, -0.3, 0));
-                    pulled = true;
-                    catchState = CatchState.CATCH;
-                }
-            }
-            case CATCH -> {
-                catchTime--;
-                if (catchTime <= 0) {
-                    fishingState.playSwallowSound(player);
-                    invalidate();
-                }
-            }
+        this.hookState = hookState.tick(this);
+        if (hookState == null) {
+            invalidate();
         }
     }
 
     public void reel() {
         this.shouldCustomTick = false;
+        // Store states as they are removed when #invalidate is called
+        HookState hookState = this.hookState;
+        FishingState fishingState = this.fishingState;
         this.invalidate();
-        if (catchState != CatchState.CATCH) {
+        if (!(hookState instanceof CatchHookState)) {
             return;
         }
         if (checkMcMMOOverfishing()) {
@@ -208,24 +178,14 @@ public class TrackedHook {
 
     public void invalidate() {
         this.shouldCustomTick = false;
+        this.fishingState = null;
+        this.hookState = null;
         stand.remove();
         hook.remove();
     }
 
     public boolean isShouldCustomTick() {
         return this.shouldCustomTick;
-    }
-
-    public int getRemainingWaitTime() {
-        return this.waitTime;
-    }
-
-    public int getRemainingLureTime() {
-        return this.lureTime;
-    }
-
-    public int getRemainingCatchTime() {
-        return this.catchTime;
     }
 
     // ArmorStand shenanigans
@@ -265,15 +225,6 @@ public class TrackedHook {
         return stand;
     }
 
-    private int fetchWaitTime(int lureLevel) {
-        int ticksPerLureLevel = 100;
-        int reduceTicks = (lureLevel * ticksPerLureLevel);
-        int maxWaitTime = Math.max(0, hook.getMaxWaitTime() - reduceTicks);
-        int minWaitTime = Math.max(0, hook.getMinWaitTime() - reduceTicks);
-
-        return (minWaitTime == maxWaitTime) ? minWaitTime : RANDOM.nextInt(minWaitTime, maxWaitTime);
-    }
-
     private boolean checkMcMMOOverfishing() {
         if (!Bukkit.getPluginManager().isPluginEnabled("mcMMO")) {
             return false;
@@ -299,6 +250,16 @@ public class TrackedHook {
             return true;
         }
         return false;
+    }
+
+    public void setPulled(boolean pulled) {
+        if (pulled) {
+            stand.teleport(stand.getLocation().add(0, -0.3, 0));
+            fishingState.playBiteSound(player);
+        } else {
+            stand.teleport(stand.getLocation().add(0, 0.3, 0));
+        }
+        this.pulled = pulled;
     }
 
 }
