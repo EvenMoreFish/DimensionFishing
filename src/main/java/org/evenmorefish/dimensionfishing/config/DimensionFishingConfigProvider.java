@@ -41,5 +41,7 @@ public interface DimensionFishingConfigProvider {
     @NonNull Predicate<Player> getLavaPredicate();
 
     @NonNull Predicate<Player> getVoidPredicate();
+
+    boolean enableWorldGuardBypass();
     
 }

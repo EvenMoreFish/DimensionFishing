@@ -12,6 +12,8 @@ repositories {
 
     // mcMMO
     maven("https://nexus.neetgames.com/repository/maven-releases/")
+    // WorldGuard
+    maven("https://maven.enginehub.org/repo/")
 }
 
 dependencies {
@@ -19,13 +21,13 @@ dependencies {
     compileOnly(libs.mcmmo) {
         exclude("*", "*")
     }
+    compileOnly(libs.worldguard)
 
     implementation(libs.bstats)
 }
 
 group = "org.evenmorefish"
 version = properties["project-version"] as String
-description = "Experimental plugin that allows void and lava fishing"
 java.sourceCompatibility = JavaVersion.VERSION_21
 
 tasks {

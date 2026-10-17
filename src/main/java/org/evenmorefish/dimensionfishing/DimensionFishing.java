@@ -1,5 +1,7 @@
 package org.evenmorefish.dimensionfishing;
 
+import com.sk89q.worldedit.regions.Region;
+import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import io.papermc.paper.plugin.configuration.PluginMeta;
 import org.bstats.bukkit.Metrics;
 import org.bstats.charts.SimplePie;
@@ -11,6 +13,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.evenmorefish.dimensionfishing.common.FishingListener;
 import org.evenmorefish.dimensionfishing.common.HookManager;
 import org.evenmorefish.dimensionfishing.config.DimensionFishingConfigProvider;
+import org.evenmorefish.dimensionfishing.integration.WorldGuardIntegration;
 import org.evenmorefish.dimensionfishing.state.FishingState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -25,7 +28,9 @@ public class DimensionFishing {
     private final Metrics metrics;
     private final Logger logger;
     private final DimensionFishingConfigProvider configProvider;
+
     private boolean hasMcMMODependency;
+    private boolean hasWorldGuardDependency;
 
     public DimensionFishing(@NotNull JavaPlugin plugin, @NotNull DimensionFishingConfigProvider configProvider) {
         if (INSTANCE != null) {
@@ -43,6 +48,12 @@ public class DimensionFishing {
             this.hasMcMMODependency = true;
         } catch (ClassNotFoundException ex) {
             this.hasMcMMODependency = false;
+        }
+        try {
+            Class.forName("com.sk89q.worldguard.bukkit.WorldGuardPlugin");
+            hasWorldGuardDependency = true;
+        } catch (ClassNotFoundException ignore) {
+            hasWorldGuardDependency = false;
         }
     }
 
@@ -83,6 +94,10 @@ public class DimensionFishing {
     public void enable() {
         HookManager.getInstance().load();
         Bukkit.getPluginManager().registerEvents(new FishingListener(), plugin);
+
+        if (hasWorldGuardDependency) {
+            Bukkit.getPluginManager().registerEvents(new WorldGuardIntegration(), plugin);
+        }
     }
 
     public void disable() {
@@ -102,6 +117,10 @@ public class DimensionFishing {
 
     public boolean hasMcMMODependency() {
         return this.hasMcMMODependency;
+    }
+
+    public boolean hasWorldGuardDependency() {
+        return this.hasWorldGuardDependency;
     }
 
 }
