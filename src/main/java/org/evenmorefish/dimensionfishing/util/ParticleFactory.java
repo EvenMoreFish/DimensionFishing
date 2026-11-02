@@ -9,7 +9,7 @@ import org.bukkit.Vibration;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.inventory.ItemStack;
 import org.evenmorefish.dimensionfishing.DimensionFishing;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -27,7 +27,7 @@ public class ParticleFactory {
 
     public ParticleFactory() {}
 
-    public ParticleFactory(@NotNull List<Map<?, ?>> mapList) {
+    public ParticleFactory(@NonNull List<Map<?, ?>> mapList) {
         loadParticles(mapList);
     }
 
@@ -55,7 +55,7 @@ public class ParticleFactory {
         });
     }
 
-    public void show(@NotNull Location location) {
+    public void show(@NonNull Location location) {
         Iterator<ParticleBuilder> iterator = particles.iterator();
         while (iterator.hasNext()) {
             ParticleBuilder particle = iterator.next();
@@ -80,7 +80,7 @@ public class ParticleFactory {
         }
     }
 
-    private void applyColor(@Nullable Object color, @NotNull ParticleBuilder builder) {
+    private void applyColor(@Nullable Object color, @NonNull ParticleBuilder builder) {
         if (color == null) {
             return;
         }
@@ -95,7 +95,7 @@ public class ParticleFactory {
         }
     }
 
-    private void applyColorTransition(@Nullable Object transition, @NotNull ParticleBuilder builder) {
+    private void applyColorTransition(@Nullable Object transition, @NonNull ParticleBuilder builder) {
         if (transition == null) {
             return;
         }
@@ -122,7 +122,7 @@ public class ParticleFactory {
         }
     }
 
-    private void applyAmount(@Nullable Object amount, @NotNull ParticleBuilder builder) {
+    private void applyAmount(@Nullable Object amount, @NonNull ParticleBuilder builder) {
         if (amount == null) {
             builder.count(1);
             return;
@@ -134,7 +134,7 @@ public class ParticleFactory {
         }
     }
 
-    private void applyExtra(@Nullable Object extra, @NotNull ParticleBuilder builder) {
+    private void applyExtra(@Nullable Object extra, @NonNull ParticleBuilder builder) {
         if (extra == null) {
             return;
         }
@@ -145,7 +145,7 @@ public class ParticleFactory {
         }
     }
 
-    private @Nullable Color fetchColorFromHex(@NotNull String hex) {
+    private @Nullable Color fetchColorFromHex(@NonNull String hex) {
         try {
             java.awt.Color awtColor = java.awt.Color.decode(hex);
             int r = awtColor.getRed();
@@ -158,7 +158,7 @@ public class ParticleFactory {
         }
     }
 
-    private void applyDataType(@Nullable Object object, @NotNull ParticleBuilder builder) {
+    private void applyDataType(@Nullable Object object, @NonNull ParticleBuilder builder) {
         if (object == null) {
             return;
         }
@@ -191,7 +191,7 @@ public class ParticleFactory {
      * Checks for invalid particle data classes.
      * If it cannot be configured, we return false.
      */
-    private boolean isInvalidParticleData(@NotNull Particle particle) {
+    private boolean isInvalidParticleData(@NonNull Particle particle) {
         Class<?> clazz = particle.getDataType();
         // Both of these require locations and those can't be configured in an understandable way.
         return (clazz == Vibration.class || clazz.getName().equals("org.bukkit.Particle.Trail"));

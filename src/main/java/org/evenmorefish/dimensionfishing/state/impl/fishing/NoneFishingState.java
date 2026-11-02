@@ -2,6 +2,7 @@ package org.evenmorefish.dimensionfishing.state.impl.fishing;
 
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerFishEvent;
 import org.evenmorefish.dimensionfishing.common.TrackedHook;
 import org.evenmorefish.dimensionfishing.state.FishingState;
 import org.evenmorefish.dimensionfishing.util.ParticleFactory;
@@ -23,7 +24,7 @@ public class NoneFishingState implements FishingState {
     }
 
     @Override
-    public boolean callEvent(@NonNull TrackedHook hook) {
+    public boolean callEvent(@NonNull TrackedHook hook, @NonNull PlayerFishEvent originalEvent) {
         return true;
     }
 

@@ -12,12 +12,12 @@ import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.evenmorefish.dimensionfishing.util.Keys;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.jetbrains.annotations.Nullable;
 
 public class FishingListener implements Listener {
 
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.HIGH)
     public void onFish(PlayerFishEvent event) {
         if (event.isCancelled()) {
             return;
@@ -48,7 +48,7 @@ public class FishingListener implements Listener {
         }
     }
 
-    private int fetchLureLevel(@NotNull Player player, @Nullable EquipmentSlot slot) {
+    private int fetchLureLevel(@NonNull Player player, @Nullable EquipmentSlot slot) {
         if (slot == null) {
             return 0;
         }

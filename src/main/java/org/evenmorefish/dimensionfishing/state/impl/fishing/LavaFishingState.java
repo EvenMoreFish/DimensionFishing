@@ -2,6 +2,7 @@ package org.evenmorefish.dimensionfishing.state.impl.fishing;
 
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.inventory.ItemStack;
 import org.evenmorefish.dimensionfishing.DimensionFishing;
 import org.evenmorefish.dimensionfishing.common.TrackedHook;
@@ -32,8 +33,8 @@ public class LavaFishingState implements FishingState {
     }
 
     @Override
-    public boolean callEvent(@NonNull TrackedHook hook) {
-        LavaFishCaughtEvent event = new LavaFishCaughtEvent(hook);
+    public boolean callEvent(@NonNull TrackedHook hook, @NonNull PlayerFishEvent originalEvent) {
+        LavaFishCaughtEvent event = new LavaFishCaughtEvent(hook, originalEvent);
         event.callEvent();
         if (event.isCancelled()) {
             return false;

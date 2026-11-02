@@ -15,7 +15,7 @@ import org.evenmorefish.dimensionfishing.common.HookManager;
 import org.evenmorefish.dimensionfishing.config.DimensionFishingConfigProvider;
 import org.evenmorefish.dimensionfishing.integration.WorldGuardIntegration;
 import org.evenmorefish.dimensionfishing.state.FishingState;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.logging.Logger;
@@ -32,7 +32,7 @@ public class DimensionFishing {
     private boolean hasMcMMODependency;
     private boolean hasWorldGuardDependency;
 
-    public DimensionFishing(@NotNull JavaPlugin plugin, @NotNull DimensionFishingConfigProvider configProvider) {
+    public DimensionFishing(@NonNull JavaPlugin plugin, @NonNull DimensionFishingConfigProvider configProvider) {
         if (INSTANCE != null) {
             throw new UnsupportedOperationException(getClass().getName() + " has already been assigned!");
         }
@@ -57,7 +57,7 @@ public class DimensionFishing {
         }
     }
 
-    public static @NotNull DimensionFishing getInstance() {
+    public static @NonNull DimensionFishing getInstance() {
         if (INSTANCE == null) {
             throw new IllegalStateException(DimensionFishing.class.getSimpleName() + " has not been assigned!");
         }
@@ -81,11 +81,11 @@ public class DimensionFishing {
         );
     }
 
-    public @NotNull JavaPlugin getPlugin() {
+    public @NonNull JavaPlugin getPlugin() {
         return this.plugin;
     }
 
-    public @NotNull DimensionFishingConfigProvider getConfigProvider() {
+    public @NonNull DimensionFishingConfigProvider getConfigProvider() {
         return this.configProvider;
     }
 

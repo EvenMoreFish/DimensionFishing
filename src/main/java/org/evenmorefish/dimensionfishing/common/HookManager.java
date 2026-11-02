@@ -6,7 +6,7 @@ import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.scheduler.BukkitTask;
 import org.evenmorefish.dimensionfishing.DimensionFishing;
 import org.evenmorefish.dimensionfishing.util.Keys;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.NonNull;
 
 import java.util.HashMap;
@@ -51,7 +51,7 @@ public class HookManager {
         }
     }
 
-    public void trackHook(@NotNull TrackedHook hook) {
+    public void trackHook(@NonNull TrackedHook hook) {
         this.trackedHooks.put(hook.getFishHook().getUniqueId(), hook);
     }
 
@@ -65,7 +65,7 @@ public class HookManager {
             if (tracked == null) {
                 return;
             }
-            tracked.reel();
+            tracked.reel(event);
             event.setCancelled(true);
         }
     }

@@ -15,6 +15,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.FishHook;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
+import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.persistence.PersistentDataType;
 import org.evenmorefish.dimensionfishing.DimensionFishing;
 import org.evenmorefish.dimensionfishing.config.DimensionFishingConfigProvider;
@@ -26,7 +27,7 @@ import org.evenmorefish.dimensionfishing.state.impl.fishing.NoneFishingState;
 import org.evenmorefish.dimensionfishing.state.impl.hook.CatchHookState;
 import org.evenmorefish.dimensionfishing.state.impl.hook.WaitHookState;
 import org.evenmorefish.dimensionfishing.util.Keys;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;
 
@@ -52,7 +53,7 @@ public class TrackedHook {
     private final boolean canLava;
     private final boolean canVoid;
 
-    public TrackedHook(@NotNull Player player, @NotNull FishHook hook, int lureLevel) {
+    public TrackedHook(@NonNull Player player, @NonNull FishHook hook, int lureLevel) {
         this.player = player;
         this.hook = hook;
         this.voidRequiredLevel = player.getLocation().getBlockY() - RANDOM.nextInt(4, 6);
@@ -64,11 +65,11 @@ public class TrackedHook {
         this.shouldCustomTick = (this.canLava || this.canVoid);
     }
 
-    public @NotNull FishHook getFishHook() {
+    public @NonNull FishHook getFishHook() {
         return this.hook;
     }
 
-    public @NotNull Player getPlayer() {
+    public @NonNull Player getPlayer() {
         return this.player;
     }
 
@@ -79,11 +80,11 @@ public class TrackedHook {
         return this.display;
     }
 
-    public @NotNull FishingState getFishingState() {
+    public @NonNull FishingState getFishingState() {
         return this.fishingState;
     }
 
-    public @NotNull HookState getHookState() {
+    public @NonNull HookState getHookState() {
         return this.hookState;
     }
 
@@ -124,7 +125,7 @@ public class TrackedHook {
         }
     }
 
-    public void reel() {
+    public void reel(@NonNull PlayerFishEvent event) {
         this.shouldCustomTick = false;
         setPulled(false);
         // Store states as they are removed when #invalidate is called
@@ -137,7 +138,7 @@ public class TrackedHook {
         if (checkMcMMOOverfishing()) {
             return;
         }
-        if (!fishingState.callEvent(this)) {
+        if (!fishingState.callEvent(this, event)) {
             fishingState.playSwallowSound(player);
             invalidate();
         }

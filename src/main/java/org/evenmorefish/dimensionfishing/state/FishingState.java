@@ -4,13 +4,14 @@ import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerFishEvent;
 import org.evenmorefish.dimensionfishing.common.TrackedHook;
 import org.evenmorefish.dimensionfishing.state.impl.fishing.LavaFishingState;
 import org.evenmorefish.dimensionfishing.state.impl.fishing.NoneFishingState;
 import org.evenmorefish.dimensionfishing.state.impl.fishing.VoidFishingState;
 import org.evenmorefish.dimensionfishing.util.ParticleFactory;
 import org.jetbrains.annotations.ApiStatus;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.jetbrains.annotations.Nullable;
 
 @ApiStatus.Internal
@@ -20,19 +21,19 @@ public interface FishingState {
     LavaFishingState LAVA = new LavaFishingState();
     VoidFishingState VOID = new VoidFishingState();
 
-    void playBiteSound(@NotNull Player player);
+    void playBiteSound(@NonNull Player player);
 
-    void playSwallowSound(@NotNull Player player);
+    void playSwallowSound(@NonNull Player player);
 
-    @NotNull ParticleFactory getLureParticles();
+    @NonNull ParticleFactory getLureParticles();
 
-    boolean callEvent(@NotNull TrackedHook hook);
+    boolean callEvent(@NonNull TrackedHook hook, @NonNull PlayerFishEvent originalEvent);
 
-    boolean checkPermission(@NotNull Player player);
+    boolean checkPermission(@NonNull Player player);
 
-    boolean checkWorld(@NotNull World hookWorld);
+    boolean checkWorld(@NonNull World hookWorld);
 
-    default @Nullable World parseWorld(@NotNull String name) {
+    default @Nullable World parseWorld(@NonNull String name) {
         if (name.contains(":")) {
             NamespacedKey key = NamespacedKey.fromString(name);
             if (key != null) {
